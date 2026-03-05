@@ -1,0 +1,29 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_REGION: ap-south-1
+    ECR_REPO: brain-tasks-app
+    IMAGE_TAG: latest
+
+phases:
+  pre_build:
+    commands:
+      - echo "Logging in to Amazon ECR..."
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 508955320023.dkr.ecr.$AWS_REGION.amazonaws.com
+      - REPO_URI=508955320023.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO
+      - echo "Repository URI set to $REPO_URI"
+  build:
+    commands:
+      - echo "Building Docker image..."
+      - docker build -t $ECR_REPO .
+      - docker tag $ECR_REPO:latest $REPO_URI:$IMAGE_TAG
+  post_build:
+    commands:
+      - echo "Pushing Docker image to ECR..."
+      - docker push $REPO_URI:$IMAGE_TAG
+      - echo "Build and push completed successfully."
+
+artifacts:
+  files:
+    - '**/*'
